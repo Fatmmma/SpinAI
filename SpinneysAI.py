@@ -93,7 +93,7 @@ def generate_recipe(prompt, llm):
     formatted_response = "\n\n".join(final_response)
 
     # Return the cleaned and formatted recipe
-    return f"Here is your recipe:\n\n{formatted_response}\n\nEnjoy your meal!"
+    return f"Here is your recipe:\n\n{response}\n\nEnjoy your meal!"
 
 
 
