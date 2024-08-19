@@ -58,10 +58,12 @@ def process_query(df, knowledge_base, query, llm):
 
 
 
+import re
+
 def generate_recipe(prompt, llm):
-    # Simplified prompt to reduce the chance of the LLM echoing unnecessary sections
+    # Refined prompt to guide the LLM in providing a clean, professional recipe
     formatted_prompt = f"""
-    You are a professional chef and recipe generator. Please generate a detailed recipe for: "{prompt}". 
+    Please generate a detailed recipe for: "{prompt}". 
     The recipe should include:
     - Recipe Name
     - Ingredients with quantities
@@ -72,26 +74,31 @@ def generate_recipe(prompt, llm):
     # Call the LLM with the formatted prompt
     response = llm(formatted_prompt)
 
-    # List of unwanted phrases to clean from the response
+    # Remove any part of the response that echoes the prompt or repeats unwanted sections
+    response = re.sub(r'You are a professional chef and recipe generator.*?The recipe should include:', '', response, flags=re.DOTALL).strip()
+    
+    # Remove any repetitive phrases or sentences
+    response = re.sub(r'\b(generate a list of all recipes)\b.*?\1\b', '', response, flags=re.DOTALL).strip()
+
+    # Clean any further repetitions that may have slipped through
+    response = re.sub(r'(You can generate a list of all recipes.*?rating\.)+', '', response, flags=re.DOTALL).strip()
+
+    # Final cleanup to remove any extra unwanted content
     unwanted_phrases = [
-        "Recipe Image", "Recipe URL", "Recipe Rating", "Recipe Author",
-        "Please include", "Optional", "as detailed as possible"
+        "generate a list of all recipes", "different rating"
     ]
     
-    # Clean the response by removing any unwanted phrases
     for phrase in unwanted_phrases:
         response = re.sub(phrase, '', response, flags=re.IGNORECASE)
-
-    # Clean up any duplicate or repetitive content
-    response = re.sub(r'\b(\w+)\s+\1\b', r'\1', response)
 
     # Return the cleaned and formatted recipe
     return f"Here is your recipe:\n\n{response.strip()}\n\nEnjoy your meal!"
 
-  #  response = llm(formatted_prompt)
+
+  # response = llm(formatted_prompt)
 
     # Check if the response contains any of the expected sections
-    sections = ["Recipe Name", "Ingredients", "Cooking Time", "Step-by-step Instructions"]
+    # sections = ["Recipe Name", "Ingredients", "Cooking Time", "Step-by-step Instructions"]
     if any(f"**{section}**:" in response for section in sections):
         # Clean and structure the response
         final_response = []
