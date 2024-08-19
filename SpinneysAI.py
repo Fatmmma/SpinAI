@@ -75,26 +75,32 @@ def generate_recipe(prompt, llm):
     # Call the LLM with the formatted prompt
     response = llm(formatted_prompt)
 
-    # Clean and structure the response
+    # Check if the response contains any of the expected sections
     sections = ["Recipe Name", "Ingredients", "Cooking Time", "Instructions", "Equipment", "Tips"]
-    final_response = []
+    if any(f"**{section}**:" in response for section in sections):
+        # Clean and structure the response
+        final_response = []
 
-    for section in sections:
-        start_index = response.find(f"**{section}**:")
-        if start_index != -1:
-            end_index = len(response)
-            for next_section in sections[sections.index(section) + 1:]:
-                next_index = response.find(f"**{next_section}**:", start_index)
-                if next_index != -1:
-                    end_index = min(end_index, next_index)
-            section_content = response[start_index:end_index].strip()
-            final_response.append(section_content)
+        for section in sections:
+            start_index = response.find(f"**{section}**:")
+            if start_index != -1:
+                end_index = len(response)
+                for next_section in sections[sections.index(section) + 1:]:
+                    next_index = response.find(f"**{next_section}**:", start_index)
+                    if next_index != -1:
+                        end_index = min(end_index, next_index)
+                section_content = response[start_index:end_index].strip()
+                final_response.append(section_content)
 
-    # Join all sections to form the final structured recipe
-    formatted_response = "\n\n".join(final_response)
+        # Join all sections to form the final structured recipe
+        formatted_response = "\n\n".join(final_response)
+        return f"Here is your recipe:\n\n{formatted_response}\n\nEnjoy your meal!"
+    
+    else:
+        # If the response does not contain any expected sections, return the raw response
+        return f"The model did not generate a structured recipe. Here is the raw output:\n\n{response}"
 
-    # Return the cleaned and formatted recipe
-    return f"Here is your recipe:\n\n{formatted_response}\n\nEnjoy your meal!"
+
 
 
 
