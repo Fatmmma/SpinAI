@@ -61,73 +61,38 @@ def process_query(df, knowledge_base, query, llm):
 import re
 
 def generate_recipe(prompt, llm):
-    # Refined prompt to guide the LLM in providing a clean, professional recipe
-    formatted_prompt = f"""
-    Please generate a detailed recipe for: "{prompt}". 
-    The recipe should include:
-    - Recipe Name
-    - Ingredients with quantities
-    - Cooking Time
-    - Step-by-step Instructions
-    """
+    # Template to guide the LLM in providing a focused, professional recipe
+    template = """
+    [Template Start]
 
-    # Call the LLM with the formatted prompt
-    response = llm(formatted_prompt)
+    ### Instruction:
+    You are an expert chef. Your sole purpose is to generate detailed recipes based on the customer's request. 
+    Please do not respond to any non-relevant questions. If a question is not related to recipes, respond with: 
+    "Sorry, I specialize in generating recipes only. How can I assist you with a recipe today?"
 
-    # Remove any part of the response that echoes the prompt or repeats unwanted sections
-    response = re.sub(r'You are a professional chef and recipe generator.*?The recipe should include:', '', response, flags=re.DOTALL).strip()
+    ### Input:
+    - The input provided will be a customer's request for a specific recipe.
+    - If the input is related to a recipe, generate a detailed and unique recipe without repeating previous answers.
+    - If the input is not related to recipes, respond with the standard non-relevant response.
+
+    ### Output Requirements:
+    - Only output the recipe content without any additional text, explanation, or repetition.
+    - Do not print the input prompt in the output.
+    - Ensure the recipe is unique and not a replication of previous responses.
+
+    Request: {}
+    """.format(prompt)
+
+    # Call the LLM with the formatted template
+    response = llm(template)
+
+    # Extract the recipe content
+    # Assuming the model outputs a properly formatted response, otherwise, handle accordingly
+    final_response = response.strip()
+
+    # Return the final recipe output
+    return final_response
     
-    # Remove any repetitive phrases or sentences
-    response = re.sub(r'\b(generate a list of all recipes)\b.*?\1\b', '', response, flags=re.DOTALL).strip()
-
-    # Clean any further repetitions that may have slipped through
-    response = re.sub(r'(You can generate a list of all recipes.*?rating\.)+', '', response, flags=re.DOTALL).strip()
-
-    # Final cleanup to remove any extra unwanted content
-    unwanted_phrases = [
-        "generate a list of all recipes", "different rating"
-    ]
-    
-    for phrase in unwanted_phrases:
-        response = re.sub(phrase, '', response, flags=re.IGNORECASE)
-
-    # Return the cleaned and formatted recipe
-    return f"Here is your recipe:\n\n{response.strip()}\n\nEnjoy your meal!"
-
-
-  # response = llm(formatted_prompt)
-
-    # Check if the response contains any of the expected sections
-    # sections = ["Recipe Name", "Ingredients", "Cooking Time", "Step-by-step Instructions"]
-    if any(f"**{section}**:" in response for section in sections):
-        # Clean and structure the response
-        final_response = []
-
-        for section in sections:
-            start_index = response.find(f"**{section}**:")
-            if start_index != -1:
-                end_index = len(response)
-                for next_section in sections[sections.index(section) + 1:]:
-                    next_index = response.find(f"**{next_section}**:", start_index)
-                    if next_index != -1:
-                        end_index = min(end_index, next_index)
-                section_content = response[start_index:end_index].strip()
-                final_response.append(section_content)
-
-        # Join all sections to form the final structured recipe
-        formatted_response = "\n\n".join(final_response)
-        return f"Here is your recipe:\n\n{response}\n\nEnjoy your meal!"
-    
-    else:
-        # If the response does not contain any expected sections, return the raw response
-        return f"The model did not generate a structured recipe. Here is the raw output:\n\n{response}"
-
-
-
-
-
-
-
 def handle_prompt(prompt, df, knowledge_base, llm):
     if prompt.lower().startswith("how to"):
         return generate_recipe(prompt, llm)
