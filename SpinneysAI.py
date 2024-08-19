@@ -94,7 +94,7 @@ def generate_recipe(prompt, llm):
 
         # Join all sections to form the final structured recipe
         formatted_response = "\n\n".join(final_response)
-        return f"Here is your recipe:\n\n{formatted_response}\n\nEnjoy your meal!"
+        return f"Here is your recipe:\n\n{response}\n\nEnjoy your meal!"
     
     else:
         # If the response does not contain any expected sections, return the raw response
