@@ -60,22 +60,23 @@ def process_query(df, knowledge_base, query, llm):
 
 def generate_recipe(prompt, llm):
     # Refined prompt to guide the LLM in providing a clean, professional recipe
-    formatted_prompt = (
-        """You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user request. Please ensure the response is well-structured and includes the following sections without any additional commentary:
-        Recipe Name:** [Insert Recipe Name]
-        Ingredients**: List all necessary ingredients with exact quantities.
-        Ingredients:
-        [Insert Ingredient 1 with Quantity]
-        [Insert Ingredient 2 with Quantity]
-        [Insert Ingredient 3 with Quantity]
-        Cooking Time:** [Insert Cooking Time]"""
-    ).format(prompt)
-    
+    formatted_prompt = f"""
+    You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user request: "{prompt}". 
+    Please ensure the response is well-structured and includes the following sections without any additional commentary:
+
+    **Recipe Name:** [Insert Recipe Name]
+    **Ingredients:** List all necessary ingredients with exact quantities.
+    **Cooking Time:** [Insert Cooking Time]
+    **Instructions:** Provide step-by-step instructions for preparing the dish.
+    **Equipment:** (Optional) List any special equipment needed.
+    **Tips:** (Optional) Provide any additional tips for better results.
+    """
+
     # Call the LLM with the formatted prompt
     response = llm(formatted_prompt)
 
     # Clean and structure the response
-    sections = ["Ingredients", "Equipment", "Instructions", "Tips"]
+    sections = ["Recipe Name", "Ingredients", "Cooking Time", "Instructions", "Equipment", "Tips"]
     final_response = []
 
     for section in sections:
@@ -93,7 +94,8 @@ def generate_recipe(prompt, llm):
     formatted_response = "\n\n".join(final_response)
 
     # Return the cleaned and formatted recipe
-    return f"Here is your recipe:\n\n{response}\n\nEnjoy your meal!"
+    return f"Here is your recipe:\n\n{formatted_response}\n\nEnjoy your meal!"
+
 
 
 
