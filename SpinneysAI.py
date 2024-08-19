@@ -61,13 +61,26 @@ def process_query(df, knowledge_base, query, llm):
 def generate_recipe(prompt, llm):
     # Refined prompt to guide the LLM in providing a clean, professional recipe
     formatted_prompt = (
-        "You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user's request. Please ensure the response is well-structured and includes the following sections without any additional commentary:\n\n"
-        "- **Ingredients**: List all necessary ingredients with exact quantities.\n"
-        "- **Equipment**: List all required equipment.\n"
-        "- **Instructions**: Provide clear, step-by-step cooking instructions.\n"
-        "- **Tips**: Offer any useful tips, variations, or serving suggestions.\n\n"
-        "Please deliver the recipe in a professional tone, free of any unnecessary content or extraneous formatting instructions. Focus solely on the recipe details.\n\n"
-        "Request: {}"
+        "Recipe Generation Rules and Context
+You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user's request. Please ensure the response is well-structured and includes the following sections without any additional commentary:
+* **Ingredients**: List all necessary ingredients with exact quantities.
+* **Instructions**: Provide clear, step-by-step cooking instructions.
+**Generated Recipe Template**
+**Recipe Name:** [Insert Recipe Name]
+**Servings:** [Insert Number of Servings]
+**Cooking Time:** [Insert Cooking Time]
+**Ingredients:**
+* [Insert Ingredient 1 with Quantity]
+* [Insert Ingredient 2 with Quantity]
+* [Insert Ingredient 3 with Quantity]
+...
+* [Insert Final Ingredient with Quantity]
+**Instructions:**
+1. [Insert Step 1]
+2. [Insert Step 2]
+3. [Insert Step 3]
+...
+[Insert Final Step]"
     ).format(prompt)
 
     # Call the LLM with the formatted prompt
