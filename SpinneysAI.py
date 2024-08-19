@@ -61,22 +61,38 @@ def process_query(df, knowledge_base, query, llm):
 def generate_recipe(prompt, llm):
     # Refined prompt to guide the LLM in providing a clean, professional recipe
     formatted_prompt = f"""
-    You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user request: "{prompt}". 
-    Please ensure the response is well-structured and includes the following sections without any additional commentary:
-
-    **Recipe Name:** [Insert Recipe Name]
-    **Ingredients:** List all necessary ingredients with exact quantities.
-    **Cooking Time:** [Insert Cooking Time]
-    **Instructions:** Provide step-by-step instructions for preparing the dish.
-    **Equipment:** (Optional) List any special equipment needed.
-    **Tips:** (Optional) Provide any additional tips for better results.
+    You are a professional chef and recipe generator. Please generate a detailed recipe based on the following request: "{prompt}". 
+    Make sure the recipe includes:
+    - Recipe Name
+    - Ingredients with quantities
+    - Cooking Time
+    - Step-by-step Instructions
     """
 
     # Call the LLM with the formatted prompt
     response = llm(formatted_prompt)
 
+    # Clean the response by removing any sections that do not match the expected format
+    unwanted_phrases = [
+        "[Insert Recipe Name]",
+        "Please include",
+        "Optional",
+        "as detailed as possible",
+        "include the URL"
+    ]
+    
+    for phrase in unwanted_phrases:
+        response = response.replace(phrase, "")
+
+    # Return the cleaned and formatted recipe
+    return f"Here is your recipe:\n\n{response.strip()}\n\nEnjoy your meal!"
+
+
+    # Call the LLM with the formatted prompt
+  #  response = llm(formatted_prompt)
+
     # Check if the response contains any of the expected sections
-    sections = ["Recipe Name", "Ingredients", "Cooking Time", "Instructions", "Equipment", "Tips"]
+    sections = ["Recipe Name", "Ingredients", "Cooking Time", "Step-by-step Instructions"]
     if any(f"**{section}**:" in response for section in sections):
         # Clean and structure the response
         final_response = []
