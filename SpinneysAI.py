@@ -59,10 +59,10 @@ def process_query(df, knowledge_base, query, llm):
 
 
 def generate_recipe(prompt, llm):
-    # Refined prompt to guide the LLM in providing a clean, professional recipe
+    # Simplified prompt to reduce the chance of the LLM echoing unnecessary sections
     formatted_prompt = f"""
-    You are a professional chef and recipe generator. Please generate a detailed recipe based on the following request: "{prompt}". 
-    Make sure the recipe includes:
+    You are a professional chef and recipe generator. Please generate a detailed recipe for: "{prompt}". 
+    The recipe should include:
     - Recipe Name
     - Ingredients with quantities
     - Cooking Time
@@ -72,23 +72,22 @@ def generate_recipe(prompt, llm):
     # Call the LLM with the formatted prompt
     response = llm(formatted_prompt)
 
-    # Clean the response by removing any sections that do not match the expected format
+    # List of unwanted phrases to clean from the response
     unwanted_phrases = [
-        "[Insert Recipe Name]",
-        "Please include",
-        "Optional",
-        "as detailed as possible",
-        "include the URL"
+        "Recipe Image", "Recipe URL", "Recipe Rating", "Recipe Author",
+        "Please include", "Optional", "as detailed as possible"
     ]
     
+    # Clean the response by removing any unwanted phrases
     for phrase in unwanted_phrases:
-        response = response.replace(phrase, "")
+        response = re.sub(phrase, '', response, flags=re.IGNORECASE)
+
+    # Clean up any duplicate or repetitive content
+    response = re.sub(r'\b(\w+)\s+\1\b', r'\1', response)
 
     # Return the cleaned and formatted recipe
     return f"Here is your recipe:\n\n{response.strip()}\n\nEnjoy your meal!"
 
-
-    # Call the LLM with the formatted prompt
   #  response = llm(formatted_prompt)
 
     # Check if the response contains any of the expected sections
