@@ -1,0 +1,13 @@
+ PyPDF2
+streamlit
+langchain
+faiss-cpu
+huggingface-hub
+transformers
+sentence-transformers
+torch
+requests
+InstructorEmbedding
+langchain-community
+fuzzywuzzy
+python-Levenshtein
