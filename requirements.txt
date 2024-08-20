@@ -1,13 +1,18 @@
  PyPDF2
 streamlit
-langchain
 faiss-cpu
 huggingface-hub
-transformers
-sentence-transformers
-torch
 requests
 InstructorEmbedding
 langchain-community
 fuzzywuzzy
 python-Levenshtein
+torch==2.0.1 --progress-bar off
+transformers==4.33.2 --progress-bar off
+langchain==0.0.299 --progress-bar off
+chromadb==0.4.10 --progress-bar off
+xformers==0.0.21 --progress-bar off
+sentence_transformers==2.2.2 --progress-bar off
+tokenizers==0.14.0 --progress-bar off
+optimum==1.13.1 --progress-bar off
+auto-gptq==0.4.2 --extra-index-url https://huggingface.github.io/autogptq-index/whl/cu118/ --progress-bar off
