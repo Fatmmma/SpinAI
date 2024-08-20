@@ -1,105 +1,85 @@
 import pandas as pd
 import streamlit as st
 from langchain.embeddings import HuggingFaceEmbeddings
-from langchain import FAISS
-from langchain.llms import HuggingFaceHub
-import fuzzywuzzy
+from langchain.vectorstores import FAISS
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig, pipeline
+from langchain import HuggingFacePipeline, PromptTemplate
 from fuzzywuzzy import process
-import re
+import os
+import torch
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    GenerationConfig,
+    pipeline,
+)
+from langchain import HuggingFacePipeline, PromptTemplate
+from langchain.chains import RetrievalQA
 
+# Function to process CSV
 def process_csv(file):
     df = pd.read_csv(file, encoding="latin-1")
-    # Ensure all product titles are strings and handle NaNs
     df['product_title'] = df['Product Name'].fillna('').astype(str).str.lower().str.strip()
-
-    # Create embeddings and knowledge base
     texts = list(map(lambda x: x.replace("\n", " "), df['product_title'].tolist()))
     embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-mpnet-base-v2")
     knowledge_base = FAISS.from_texts(texts, embeddings)
-    
     return df, knowledge_base
 
+# Function to get TinyLlama LLM
 def get_llm():
-    # Provide your API key directly here
-    api_key = "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"
-    return HuggingFaceHub(
-        repo_id="NousResearch/Llama-3-7b-chat-hf",
-        model_kwargs={"temperature": 0.5, "max_length": 1024},
-        huggingfacehub_api_token=api_key
-    )
+    model_name = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+    model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True, device_map="auto")
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.padding_side = "right"
+    generation_config = GenerationConfig(max_new_tokens=256, temperature=0.1, top_p=0.9, do_sample=True, repetition_penalty=1.1)
+    text_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer, return_full_text=True, generation_config=generation_config)
+    llm = HuggingFacePipeline(pipeline=text_pipeline)
+    return llm
 
+# Function to process queries
 def process_query(df, knowledge_base, query, llm):
-    # Retrieve multiple similar matches
     docs = knowledge_base.similarity_search(query, k=10)
     results = []
     seen_titles = set()
-    
-    # Convert document contents to lower case for matching
     doc_titles = [doc.page_content.lower() for doc in docs]
-    
-    # Fuzzy matching to find best matches
     best_matches = process.extract(query.lower(), doc_titles, limit=10)
-    
     for match in best_matches:
         product_title = match[0].strip()
         if product_title in seen_titles:
             continue
         seen_titles.add(product_title)
-        
         sku_matches = df.loc[df['product_title'] == product_title, 'SKU'].values
         if len(sku_matches) > 0:
             results.append(f"{product_title.title()}\nSKU: {sku_matches[0]}")
-    
-    if results:
-        return "We have found:\n\n" + "\n\n".join(results)
-    else:
-        return "No matching products found."
-        
+    return "We have found:\n\n" + "\n\n".join(results) if results else "No matching products found."
 
-
-
-import re
-
+# Function to generate a recipe
 def generate_recipe(prompt, llm):
-    # Template to guide the LLM in providing a focused, professional recipe
     template = """
-    [Template Start]
+    You are a professional chef and recipe generator. Your task is to create a detailed, clear, and concise recipe based on the user's request. Please ensure the response is well-structured and includes the following sections without any additional commentary:
 
-    ### Instruction:
-    You are an expert chef. Your sole purpose is to generate detailed recipes based on the customer's request. 
-    Please do not respond to any non-relevant questions. If a question is not related to recipes, respond with: 
-    "Sorry, I specialize in generating recipes only. How can I assist you with a recipe today?"
+    - **Ingredients**: List all necessary ingredients with exact quantities.
+    - **Equipment**: List all required equipment.
+    - **Instructions**: Provide clear, step-by-step cooking instructions.
+    - **Tips**: Offer any useful tips, variations, or serving suggestions.
 
-    ### Input:
-    - The input provided will be a customer's request for a specific recipe.
-    - If the input is related to a recipe, generate a detailed and unique recipe without repeating previous answers.
-    - If the input is not related to recipes, respond with the standard non-relevant response.
+    Please deliver the recipe in a professional tone, free of any unnecessary content or extraneous formatting instructions. Focus solely on the recipe details.
 
-    ### Output Requirements:
-    - Only output the recipe content without any additional text, explanation, or repetition.
-    - Do not print the input prompt in the output.
-    - Ensure the recipe is unique and not a replication of previous responses.
+    Request: {question}
+    """
+    formatted_prompt = template.format(question=prompt)
+    response = llm(formatted_prompt)
+    return response[0]['generated_text'] if isinstance(response, list) else response
 
-    Request: {}
-    """.format(prompt)
-
-    # Call the LLM with the formatted template
-    response = llm(template)
-
-    # Extract the recipe content
-    # Assuming the model outputs a properly formatted response, otherwise, handle accordingly
-    final_response = response.strip()
-
-    # Return the final recipe output
-    return final_response
-    
+# Function to handle user prompts
 def handle_prompt(prompt, df, knowledge_base, llm):
     if prompt.lower().startswith("how to"):
         return generate_recipe(prompt, llm)
     else:
-        return process_query(df, knowledge_base, prompt,llm)
+        return process_query(df, knowledge_base, prompt, llm)
 
-
+# Streamlit app
 if __name__ == '__main__':
     st.set_page_config(page_title="Chat with Spinneys AI", page_icon=":shark:", layout="wide")
     st.title("Chat with Spinneys AI")
@@ -108,11 +88,8 @@ if __name__ == '__main__':
 
     with col1:
         st.header("Upload CSV")
-
-        # Check if the CSV data is already in session_state
         if 'df' not in st.session_state or 'knowledge_base' not in st.session_state:
             csv_file = st.file_uploader("Upload your CSV File", type="csv")
-            
             if csv_file is not None:
                 with st.spinner("Processing..."):
                     df, knowledge_base = process_csv(csv_file)
@@ -125,7 +102,6 @@ if __name__ == '__main__':
 
     with col2:
         st.header("Chat")
-        
         if 'messages' not in st.session_state:
             st.session_state.messages = []
 
