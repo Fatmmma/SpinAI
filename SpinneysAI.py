@@ -21,7 +21,7 @@ def process_csv(file):
 
 def get_llm():
     # Provide your API key directly here
-    api_key = "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"
+    api_key = "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"
     return HuggingFaceHub(
         repo_id="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
         model_kwargs={"temperature": 0.5, "max_length": 1024},
