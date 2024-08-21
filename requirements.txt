@@ -7,7 +7,7 @@ InstructorEmbedding
 langchain-community
 fuzzywuzzy
 python-Levenshtein
-torch==2.0.
+torch==2.0
 transformers==4.33.2
 langchain==0.0.299
 chromadb==0.4.10
