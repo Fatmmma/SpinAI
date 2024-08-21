@@ -20,14 +20,20 @@ def process_csv(file):
     return df, knowledge_base
 
 def get_llm():
-    # Provide your API key directly here
     api_key = "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"
+    
     return HuggingFaceHub(
         repo_id="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
-        model_kwargs={"temperature": 0.5, "max_length": 1024},
+        model_kwargs={
+            "temperature": 0.3,  # Lower temperature for more focused responses
+            "max_length": 2048,  # Increase max_length to allow longer responses
+            "top_p": 0.9,        # Nucleus sampling
+            "top_k": 50,         # Use top_k sampling for better quality
+            "repetition_penalty": 1.1  # Slight penalty for repetitive phrases
+        },
         huggingfacehub_api_token=api_key
     )
-
+    
 def process_query(df, knowledge_base, query, llm):
     # Retrieve multiple similar matches
     docs = knowledge_base.similarity_search(query, k=10)
