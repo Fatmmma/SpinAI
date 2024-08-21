@@ -26,7 +26,7 @@ def get_llm():
         repo_id="TinyLlama/TinyLlama-1.1B-Chat-v1.0",
         model_kwargs={
             "temperature": 0.3,  # Lower temperature for more focused responses
-            "max_length": 2048,  # Increase max_length to allow longer responses
+            "max_length": 5048,  # Increase max_length to allow longer responses
             "top_p": 0.9,        # Nucleus sampling
             "top_k": 50,         # Use top_k sampling for better quality
             "repetition_penalty": 1.1  # Slight penalty for repetitive phrases
