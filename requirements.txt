@@ -1,15 +1,13 @@
-PyPDF2
-Streamlit
+ PyPDF2
+streamlit
+langchain
 faiss-cpu
 huggingface-hub
+transformers
+sentence-transformers
+torch
 requests
 InstructorEmbedding
 langchain-community
 fuzzywuzzy
 python-Levenshtein
-torch==2.0
-transformers==4.33.2
-langchain==0.0.299
-chromadb==0.4.10
-xformers==0.0.21
-sentence_transformers==2.2.2
