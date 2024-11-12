@@ -10,3 +10,4 @@ InstructorEmbedding
 langchain-community
 fuzzywuzzy
 python-Levenshtein
+replicate
